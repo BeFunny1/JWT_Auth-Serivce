@@ -1,0 +1,16 @@
+version: "3.4"
+
+services:
+  auth_service:
+    container_name: auth_service
+    ports:
+      - "8000:8000"
+    build: ./src
+    restart: always
+    env_file: .env
+    volumes:
+      - static_volume:/src/static/
+    
+volumes:
+  db_volume:
+  static_volume:

@@ -2,10 +2,10 @@ from fastapi import Depends, APIRouter
 from starlette import status
 from starlette.responses import Response
 
-from src.app.auth_service.views.models.update import UpdateTokensInput, UpdateTokensOutput
-from src.app.auth_service.views.models.deregister import DeregisterInput, DeregisterOutput
-from src.app.auth_service.views.models.register import RegisterInput, RegisterOutput
-from src.app.auth_service.views.middlewares import check_api_secret
+from app.auth_service.views.models.update import UpdateTokensInput, UpdateTokensOutput
+from app.auth_service.views.models.deregister import DeregisterInput, DeregisterOutput
+from app.auth_service.views.models.register import RegisterInput, RegisterOutput
+from app.auth_service.views.middlewares import check_api_secret
 
 router = APIRouter(
     prefix='/auth_service',

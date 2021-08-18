@@ -1,6 +1,6 @@
 from fastapi import Header, HTTPException
 
-from src.config.settings import API_SECRET
+from config.settings import API_SECRET
 
 
 async def check_api_secret(X_API_SECRET: str = Header(...)):
