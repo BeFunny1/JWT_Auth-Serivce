@@ -1,11 +1,12 @@
-from fastapi import FastAPI
+from app.middlewares import check_api_secret
+from fastapi import FastAPI, Depends
 from tortoise.contrib.fastapi import register_tortoise
 
 from config.settings import *
 from app.auth_service.views.endpoints import router as auth
 
 auth_service = FastAPI()
-auth_service.include_router(auth, tags=['auth_service'])
+auth_service.include_router(auth, tags=['auth_service'], dependencies=[Depends(check_api_secret)])
 
 register_tortoise(
     auth_service,

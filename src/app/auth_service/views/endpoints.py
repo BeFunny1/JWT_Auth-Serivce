@@ -7,10 +7,9 @@ from starlette.responses import Response
 from app.auth_service.views.in_out_models.update import UpdateTokensInput, UpdateTokensOutput
 from app.auth_service.views.in_out_models.deregister import DeregisterInput, DeregisterOutput
 from app.auth_service.views.in_out_models.register import RegisterInput, RegisterOutput
-from app.auth_service.views.middlewares import check_api_secret
 
 
-router = APIRouter(prefix='/auth_service', dependencies=[Depends(check_api_secret)])
+router = APIRouter(prefix='/auth_service')
 
 
 @router.post(
