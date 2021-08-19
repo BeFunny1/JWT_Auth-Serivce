@@ -1,15 +1,30 @@
 version: "3.4"
 
 services:
+  db:
+    container_name: db
+    build: ./postgres
+    volumes:
+      - db_volume:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_service
+    restart: always
+
   auth_service:
     container_name: auth_service
     ports:
       - "8000:8000"
     build: ./src
     restart: always
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/auth_service
     env_file: .env
     volumes:
       - static_volume:/src/static/
+    depends_on:
+      - db
     
 volumes:
   db_volume:
