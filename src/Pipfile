@@ -7,11 +7,13 @@ verify_ssl = true
 
 [packages]
 fastapi =                   {version="==0.68.0", index="pypi"}
+fastapi-jwt-auth =          {version="==0.5.0", index="pypi"}
 uvicorn =                   {version="==0.15.0", index="pypi"}
 asyncpg =                   {version="==0.24.0", index="pypi"}
 starlette =                 {version="==0.14.2", index="pypi"}
 pydantic =                  {version="==1.8.2", index="pypi"}
 tortoise-orm =              {version="==0.17.6", index="pypi"}
+redis =                     {version="==3.5.3", index="pypi"}
 
 [requires]
 python_version = "3.8"
