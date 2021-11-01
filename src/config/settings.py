@@ -1,15 +1,19 @@
+from datetime import timedelta
 import os
 
-from pydantic import BaseModel
+from redis import Redis
+
+from app.pkg.jwt.jwt_config import JWTConfig
 
 
-ACCESS_TOKEN_TTL = 15
-REFRESH_TOKEN_TTL = 12 * 24 * 60
+redis = Redis(host='redis', port=6379, db=0, decode_responses=True)
 
-API_SECRET = os.environ['API_SECRET']
-# JWT_SECRET = os.environ['JWT_SECRET']
-HASH_SALT = os.environ['HASH_SALT']
+API_SECRET = os.getenv('API_SECRET')
+JWT_SECRET = os.getenv('JWT_SECRET')
+HASH_SALT = os.getenv('HASH_SALT')
 
-
-class Settings(BaseModel):
-    authjwt_secret_key: str = os.environ['JWT_SECRET']
+jwt_config = JWTConfig(
+    secret=JWT_SECRET,
+    access_token_ttl=timedelta(seconds=60*15),
+    refresh_token_ttl=timedelta(seconds=60*60*24*30)
+)

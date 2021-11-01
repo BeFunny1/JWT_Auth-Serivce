@@ -15,3 +15,14 @@ piplock:
 
 psql:
 	docker exec -it db psql -U postgres
+
+test:
+	docker-compose run --volume=${PWD}/src:/src auth_service bash -c '/wait && pytest -vv'
+
+# $m [marks]
+# $k [keyword expressions]
+# $o [other params in pytest notation]
+devtest:
+	docker-compose run --volume=${PWD}/src:/src auth_service bash -c '/wait && pytest $(if $m, -m $m)  $(if $k, -k $k) $o'
+
+.PHONY: test
