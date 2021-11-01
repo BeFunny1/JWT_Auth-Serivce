@@ -7,7 +7,9 @@ verify_ssl = true
 
 [packages]
 fastapi =                   {version="==0.68.0", index="pypi"}
-fastapi-jwt-auth =          {version="==0.5.0", index="pypi"}
+pyjwt =                     {version="==2.3.0", index="pypi"}
+pytest =                    {version="==6.2.5", index="pypi"}
+cryptography =              {version="==35.0.0", index="pypi"}
 uvicorn =                   {version="==0.15.0", index="pypi"}
 asyncpg =                   {version="==0.24.0", index="pypi"}
 starlette =                 {version="==0.14.2", index="pypi"}
