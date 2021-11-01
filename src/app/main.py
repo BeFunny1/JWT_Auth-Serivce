@@ -6,6 +6,7 @@ from tortoise.contrib.fastapi import register_tortoise
 from config.settings import *
 
 from app.internal.auth_service.views.endpoints import router as auth
+from app.internal.middlewares import check_api_secret
 
 
 auth_service = FastAPI()
@@ -15,7 +16,7 @@ auth_service.include_router(auth, tags=['auth_service'], dependencies=[Depends(c
 register_tortoise(
     auth_service,
     db_url=os.getenv("DATABASE_URL"),
-    modules={"models": ["app.auth_service.models"]},
+    modules={"models": ["app.internal.auth_service.models"]},
     generate_schemas=True,
     add_exception_handlers=True,
 )

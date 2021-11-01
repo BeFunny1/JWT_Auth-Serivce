@@ -1,35 +1,20 @@
 from typing import List
-from app.auth_service.views.in_out_models.user import UserOutput
 
 from fastapi import APIRouter, HTTPException, Depends
-
-from fastapi_jwt_auth import AuthJWT
 
 from starlette import status
 from starlette.responses import Response
 
-from app.auth_service.models import AuthenticatedUser
-from app.auth_service.utils.password_hash import hash_password
+from app.internal.auth_service.models import AuthenticatedUser
+from app.internal.auth_service.utils.password_hash import hash_password
 
-from app.auth_service.views.in_out_models.update import UpdateTokensInput, UpdateTokensOutput
-from app.auth_service.views.in_out_models.register import RegisterInput, RegisterOutput
+from app.internal.auth_service.views.in_out_models.update import UpdateTokensInput, UpdateTokensOutput
+from app.internal.auth_service.views.in_out_models.register import RegisterInput, RegisterOutput
 
-from config.settings import redis, settings
+from config.settings import redis
 
 
 router = APIRouter(prefix='/auth_service')
-
-
-@AuthJWT.load_config
-def get_config():
-    return settings
-
-
-@AuthJWT.token_in_denylist_loader
-def check_if_token_in_denylist(decrypted_token):
-    jti = decrypted_token['jti']
-    entry = redis.get(jti)
-    return entry and entry == 'true'
 
 
 @router.post(
