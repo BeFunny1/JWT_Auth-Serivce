@@ -1,12 +1,7 @@
 from datetime import timedelta
 import os
 
-from redis import Redis
-
 from app.pkg.jwt.jwt_config import JWTConfig
-
-
-redis = Redis(host='redis', port=6379, db=0, decode_responses=True)
 
 API_SECRET = os.getenv('API_SECRET')
 JWT_SECRET = os.getenv('JWT_SECRET')
