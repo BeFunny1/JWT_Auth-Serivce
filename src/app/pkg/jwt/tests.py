@@ -111,3 +111,20 @@ def test_verify_token__nbf_has_not_come_yet():
     with pytest.raises(ImmatureSignatureError):
         assert auth.verify_token(access_token)
         assert auth.verify_token(refresh_token)
+
+
+def test_get_jti():
+    auth = JWTAuth(generate_plug_config())
+    
+    access_token = auth.generate_access_token('me')
+    refresh_token = auth.generate_refresh_token('me')
+    assert auth.get_jti(access_token) == jwt.decode(access_token, options={"verify_signature": False})['jti']
+    assert auth.get_jti(refresh_token) == jwt.decode(refresh_token, options={"verify_signature": False})['jti']
+
+
+def test_get_sub():
+    auth = JWTAuth(generate_plug_config())
+    subject = 'me'
+    access_token = auth.generate_access_token(subject)
+    refresh_token = auth.generate_refresh_token(subject)
+    assert auth.get_sub(access_token) == auth.get_sub(refresh_token) == subject

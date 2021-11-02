@@ -38,7 +38,7 @@ class JWTAuth:
             iat=current_timestamp,
             nbf=payload['nbf'] if payload.get('nbf') else current_timestamp
         )
-        data.update(dict(exp=data['nbf'] + ttl.seconds)) if ttl else None
+        data.update(dict(exp=data['nbf'] + int(ttl.total_seconds()))) if ttl else None
         payload.update(data)
         return jwt.encode(payload, self._config.secret, algorithm=self._config.algorithm)
 
@@ -48,3 +48,9 @@ class JWTAuth:
 
     def verify_token(self, token):
         return jwt.decode(token, self._config.secret, algorithms=[self._config.algorithm])
+    
+    def get_jti(self, token):
+        return jwt.decode(token, self._config.secret, algorithms=[self._config.algorithm])['jti']
+    
+    def get_sub(self, token):
+        return jwt.decode(token, self._config.secret, algorithms=[self._config.algorithm])['sub']

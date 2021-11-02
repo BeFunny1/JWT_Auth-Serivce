@@ -1,11 +1,11 @@
 from pydantic import BaseModel
 
 
-class RegisterInput(BaseModel):
+class AuthInput(BaseModel):
     login: str
     password: str
 
 
-class RegisterOutput(BaseModel):
+class AuthOutput(BaseModel):
     access_token: str
     refresh_token: str
