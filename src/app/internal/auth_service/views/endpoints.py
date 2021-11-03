@@ -11,7 +11,7 @@ from app.internal.middlewares import check_api_secret
 from app.internal.auth_service.models import AuthenticatedUser, IssuedToken
 
 from app.internal.auth_service.utils.password_hash import hash_password
-from app.internal.auth_service.utils.check_token_invalid import check_token_invalid
+from app.internal.auth_service.utils.try_decode_token import try_decode_token
 
 from app.internal.auth_service.views.in_out_models.update import UpdateTokensInput, UpdateTokensOutput
 from app.internal.auth_service.views.in_out_models.auth import AuthInput, AuthOutput
@@ -73,7 +73,7 @@ async def login(body: AuthInput):
 )
 # Получает refresh-токен, возвращает пару access/refresh 
 async def update_tokens(body: UpdateTokensInput):
-    payload, error = check_token_invalid(jwt_auth, body.refresh_token)
+    payload, error = try_decode_token(jwt_auth, body.refresh_token)
     if error:
         return error
     
