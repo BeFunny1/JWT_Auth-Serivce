@@ -1,9 +1,12 @@
-from fastapi import APIRouter
+from fastapi import FastAPI, Depends
 from starlette.responses import Response
 
 from app.pkg.jwt.jwt_auth import JWTAuth
 
 from app.internal.utils.error_response import error_response
+
+from app.internal.dependencies import required_api_secret
+from app.internal.middlewares import check_api_secret
 
 from app.internal.auth_service.models import AuthenticatedUser, IssuedToken
 
@@ -17,11 +20,12 @@ from app.internal.auth_service.views.in_out_models.revoke import RevokeTokenInpu
 from config.settings import jwt_config
 
 
-router = APIRouter(prefix='/auth_service')
+auth_api = FastAPI(dependencies=[Depends(required_api_secret)])
+auth_api.middleware("http")(check_api_secret)
 
 jwt_auth = JWTAuth(jwt_config)
 
-@router.post(
+@auth_api.post(
     '/register',
     response_model=AuthOutput,
 )
@@ -43,7 +47,7 @@ async def register(body: AuthInput):
     return AuthOutput(access_token=access_token, refresh_token=refresh_token)
 
 
-@router.post(
+@auth_api.post(
     '/login',
     response_model=AuthOutput,
 )
@@ -63,7 +67,7 @@ async def login(body: AuthInput):
     return AuthOutput(access_token=access_token, refresh_token=refresh_token)
 
 
-@router.put(
+@auth_api.put(
     '/update_tokens',
     response_model=UpdateTokensOutput,
 )
@@ -93,7 +97,7 @@ async def update_tokens(body: UpdateTokensInput):
     return UpdateTokensOutput(access_token=access_token, refresh_token=refresh_token)
 
 
-@router.post('/revoke_token')
+@auth_api.post('/revoke_token')
 # Отзывает токен пользователя
 async def revoke_token(body: RevokeTokenInput):
     sub = jwt_auth.get_sub(body.refresh_token)

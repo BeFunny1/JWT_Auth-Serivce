@@ -1,5 +1,6 @@
-from datetime import timedelta
 import os
+
+from datetime import timedelta
 
 from app.pkg.jwt.jwt_config import JWTConfig
 
