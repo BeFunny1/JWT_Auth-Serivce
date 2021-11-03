@@ -3,6 +3,7 @@ import jwt
 from fastapi import Request
 from jwt.exceptions import InvalidTokenError
 
+from app.internal.auth_service.utils.check_revoked import check_revoked
 from app.internal.utils.error_response import error_response
 from config.settings import JWT_SECRET, API_SECRET
 
@@ -24,6 +25,9 @@ async def check_access_token(request: Request, call_next):
     if not is_docs_call(request):
         authentication_header = request.headers.get('authentication')
         
+        if authentication_header is None:
+            return error_response(error='AuthError', error_description='Access-token header is not set')
+        
         if 'Bearer ' not in authentication_header:
             return error_response(error='AuthError', error_description='Access-token must have the form "Bearer <TOKEN>"', status_code=403)
         
@@ -34,5 +38,8 @@ async def check_access_token(request: Request, call_next):
                 return error_response(error='AuthError', error_description='A refresh-token was passed, but access-token was expected', status_code=403)
         except InvalidTokenError as e:
             return error_response(error='AuthError', error_description=str(e), status_code=403)
+        
+        if await check_revoked(payload['jti']):
+            return error_response(error='AuthError', error_description='This token has revoked', status_code=403)
 
     return await call_next(request)
