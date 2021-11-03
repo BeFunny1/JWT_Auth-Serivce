@@ -105,10 +105,16 @@ async def update_tokens(body: UpdateTokensInput):
 @auth_api.post('/revoke_all_tokens')
 # Отзывает все токены пользователя
 async def revoke_all_tokens(body: RevokeTokenInput):
+    payload, error = try_decode_token(jwt_auth, body.refresh_token)
+    if error:
+        return error
+    
+    if payload['type'] != TokenType.REFRESH:
+        return error_response(error='InvalidToken', error_description='A refresh-token was passed, but access-token was expected')
+    
     if await check_revoked(jwt_auth.get_jti(body.refresh_token)):
         return error_response(error='RevokeToken', error_description='This token already revoked')
     
-    sub = jwt_auth.get_sub(body.refresh_token)
-    user = await AuthenticatedUser.filter(login=sub).first()
+    user = await AuthenticatedUser.filter(login=payload['sub']).first()
     await IssuedToken.filter(subject=user).update(revoked=True)
     return JSONResponse(status_code=200, content={'message': 'Success'})
