@@ -13,7 +13,6 @@ def is_docs_call(request):
 
 async def check_api_secret(request: Request, call_next):
     if not is_docs_call(request):
-        print(request.headers, flush=True)
         secret_header = request.headers.get('x-api-secret')
         if secret_header != API_SECRET:
             return error_response(error='AccessError', error_description='Api-Secret-Token header invalid', status_code=403)
@@ -24,8 +23,6 @@ async def check_api_secret(request: Request, call_next):
 async def check_access_token(request: Request, call_next):
     if not is_docs_call(request):
         authentication_header = request.headers.get('authentication')
-        if authentication_header is None:
-            return error_response(error='AuthError', error_description='JWT token is not specified in the header', status_code=403)
         
         if 'Bearer ' not in authentication_header:
             return error_response(error='AuthError', error_description='Access-token must have the form "Bearer <TOKEN>"', status_code=403)
