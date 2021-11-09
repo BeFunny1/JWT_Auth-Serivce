@@ -54,3 +54,6 @@ class JWTAuth:
     
     def get_sub(self, token):
         return jwt.decode(token, self._config.secret, algorithms=[self._config.algorithm])['sub']
+    
+    def get_raw_jwt(self, token):
+        return jwt.decode(token, self._config.secret, algorithms=[self._config.algorithm])

@@ -41,11 +41,11 @@ async def register(body: AuthInput):
         password_hash=hash_password(body.password),
     )
     
-    access_token = jwt_auth.generate_access_token(subject=user.login)
-    refresh_token = jwt_auth.generate_refresh_token(subject=user.login)
+    access_token = jwt_auth.generate_access_token(subject=user.login, payload={'device_id': body.device_id})
+    refresh_token = jwt_auth.generate_refresh_token(subject=user.login, payload={'device_id': body.device_id})
     
-    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(access_token))
-    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(refresh_token))
+    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(access_token), device_id=body.device_id)
+    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(refresh_token), device_id=body.device_id)
     
     return AuthOutput(access_token=access_token, refresh_token=refresh_token)
 
@@ -54,19 +54,19 @@ async def register(body: AuthInput):
     '/login',
     response_model=AuthOutput,
 )
-# Вход пользователя в систему по логину/паролю, возвращает новые access/refresh-токены, деактивирует старые токены 
+# Вход пользователя в систему по логину/паролю, возвращает новые access/refresh-токены, деактивирует старые токены, выданные на это устройство
 async def login(body: AuthInput):
     if not await AuthenticatedUser.filter(login=body.login).exists():
         return error_response(error='AuthError', error_description='There is no user with this login')
     
     user = await AuthenticatedUser.filter(login=body.login).first()
-    await IssuedToken.filter(subject=user).update(revoked=True)
+    await IssuedToken.filter(subject=user, device_id=body.device_id).update(revoked=True)
     
-    access_token = jwt_auth.generate_access_token(subject=user.login)
-    refresh_token = jwt_auth.generate_refresh_token(subject=user.login)
+    access_token = jwt_auth.generate_access_token(subject=user.login, payload={'device_id': body.device_id})
+    refresh_token = jwt_auth.generate_refresh_token(subject=user.login, payload={'device_id': body.device_id})
     
-    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(access_token))
-    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(refresh_token))
+    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(access_token), device_id=body.device_id)
+    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(refresh_token), device_id=body.device_id)
     
     return AuthOutput(access_token=access_token, refresh_token=refresh_token)
 
@@ -75,7 +75,7 @@ async def login(body: AuthInput):
     '/update_tokens',
     response_model=UpdateTokensOutput,
 )
-# Получает refresh-токен, возвращает пару access/refresh, ануллируя все выпущенные на пользователя токены
+# Получает refresh-токен, возвращает пару access/refresh, ануллируя все выпущенные на устройство пользователя токены
 async def update_tokens(body: UpdateTokensInput):
     payload, error = try_decode_token(jwt_auth, body.refresh_token)
     if error:
@@ -91,13 +91,14 @@ async def update_tokens(body: UpdateTokensInput):
         await IssuedToken.filter(subject=user).update(revoked=True)
         return error_response(error='RevokedTokenError', error_description='This token has already been revoked')
     
-    await IssuedToken.filter(subject=user).update(revoked=True)
+    device_id = jwt_auth.get_raw_jwt(body.refresh_token)['device_id']
+    await IssuedToken.filter(subject=user, device_id=device_id).update(revoked=True)
     
-    access_token = jwt_auth.generate_access_token(subject=user.login)
-    refresh_token = jwt_auth.generate_refresh_token(subject=user.login)
+    access_token = jwt_auth.generate_access_token(subject=user.login, payload={'device_id': device_id})
+    refresh_token = jwt_auth.generate_refresh_token(subject=user.login, payload={'device_id': device_id})
     
-    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(access_token))
-    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(refresh_token))
+    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(access_token), device_id=device_id)
+    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(refresh_token), device_id=device_id)
     
     return UpdateTokensOutput(access_token=access_token, refresh_token=refresh_token)
 
