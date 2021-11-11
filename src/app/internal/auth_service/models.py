@@ -15,6 +15,7 @@ class IssuedToken(Model):
     jti = fields.CharField(max_length=255, pk=True)
     device_id = fields.CharField(max_length=255)
     revoked = fields.BooleanField(default=False)
+    expired_time = fields.IntField()
 
     def __str__(self) -> str:
         return f'{self.jti}'

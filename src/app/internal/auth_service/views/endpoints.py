@@ -49,8 +49,10 @@ async def register(body: AuthInput):
     access_token = jwt_auth.generate_access_token(subject=user.login, payload={'device_id': device_id})
     refresh_token = jwt_auth.generate_refresh_token(subject=user.login, payload={'device_id': device_id})
     
-    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(access_token), device_id=device_id)
-    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(refresh_token), device_id=device_id)
+    access_token_payload, refresh_token_payload = jwt_auth.get_raw_jwt(access_token), jwt_auth.get_raw_jwt(refresh_token)
+    
+    await IssuedToken.create(subject=user, jti=access_token_payload['jti'], device_id=device_id, expired_time=access_token_payload['exp'])
+    await IssuedToken.create(subject=user, jti=refresh_token_payload['jti'], device_id=device_id, expired_time=refresh_token_payload['exp'])
     
     return AuthOutput(access_token=access_token, refresh_token=refresh_token)
 
@@ -65,15 +67,16 @@ async def login(body: AuthInput):
         return error_response(error='AuthError', error_description='There is no user with this login')
     
     user = await AuthenticatedUser.filter(login=body.login).first()
-    # await IssuedToken.filter(subject=user, device_id=device_id).update(revoked=True)
     
     device_id = __generate_device_id()
     
     access_token = jwt_auth.generate_access_token(subject=user.login, payload={'device_id': device_id})
     refresh_token = jwt_auth.generate_refresh_token(subject=user.login, payload={'device_id': device_id})
     
-    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(access_token), device_id=device_id)
-    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(refresh_token), device_id=device_id)
+    access_token_payload, refresh_token_payload = jwt_auth.get_raw_jwt(access_token), jwt_auth.get_raw_jwt(refresh_token)
+    
+    await IssuedToken.create(subject=user, jti=access_token_payload['jti'], device_id=device_id, expired_time=access_token_payload['exp'])
+    await IssuedToken.create(subject=user, jti=refresh_token_payload['jti'], device_id=device_id, expired_time=refresh_token_payload['exp'])
     
     return AuthOutput(access_token=access_token, refresh_token=refresh_token)
 
@@ -90,7 +93,7 @@ async def logout(authentication: str = Header(...)):
         return error
     
     if payload['type'] != TokenType.ACCESS:
-        return error_response(error='InvalidToken', error_description='A access-token was passed, but refresh-token was expected')
+        return error_response(error='InvalidToken', error_description='The transferred token is not an access-token')
     
     device_id = payload['device_id']
     await IssuedToken.filter(device_id=device_id).update(revoked=True)
@@ -109,7 +112,7 @@ async def update_tokens(body: UpdateTokensInput):
         return error
     
     if payload['type'] != TokenType.REFRESH:
-        return error_response(error='InvalidToken', error_description='A refresh-token was passed, but access-token was expected')
+        return error_response(error='InvalidToken', error_description='The transferred token is not an refresh-token')
     
     user = await AuthenticatedUser.filter(login=payload['sub']).first()
     
@@ -118,14 +121,16 @@ async def update_tokens(body: UpdateTokensInput):
         await IssuedToken.filter(subject=user).update(revoked=True)
         return error_response(error='RevokedTokenError', error_description='This token has already been revoked')
     
-    device_id = jwt_auth.get_raw_jwt(body.refresh_token)['device_id']
+    device_id = payload['device_id']
     await IssuedToken.filter(subject=user, device_id=device_id).update(revoked=True)
     
     access_token = jwt_auth.generate_access_token(subject=user.login, payload={'device_id': device_id})
     refresh_token = jwt_auth.generate_refresh_token(subject=user.login, payload={'device_id': device_id})
     
-    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(access_token), device_id=device_id)
-    await IssuedToken.create(subject=user, jti=jwt_auth.get_jti(refresh_token), device_id=device_id)
+    access_token_payload, refresh_token_payload = jwt_auth.get_raw_jwt(access_token), jwt_auth.get_raw_jwt(refresh_token)
+    
+    await IssuedToken.create(subject=user, jti=access_token_payload['jti'], device_id=device_id, expired_time=access_token_payload['exp'])
+    await IssuedToken.create(subject=user, jti=refresh_token_payload['jti'], device_id=device_id, expired_time=refresh_token_payload['exp'])
     
     return UpdateTokensOutput(access_token=access_token, refresh_token=refresh_token)
 
@@ -138,7 +143,7 @@ async def revoke_all_tokens(body: RevokeTokenInput):
         return error
     
     if payload['type'] != TokenType.REFRESH:
-        return error_response(error='InvalidToken', error_description='A refresh-token was passed, but access-token was expected')
+        return error_response(error='InvalidToken', error_description='The transferred token is not an refresh-token')
     
     if await check_revoked(jwt_auth.get_jti(body.refresh_token)):
         return error_response(error='RevokeToken', error_description='This token already revoked')

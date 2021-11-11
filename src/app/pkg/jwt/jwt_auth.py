@@ -50,10 +50,16 @@ class JWTAuth:
         return jwt.decode(token, self._config.secret, algorithms=[self._config.algorithm])
     
     def get_jti(self, token):
-        return jwt.decode(token, self._config.secret, algorithms=[self._config.algorithm])['jti']
+        return self.verify_token(token)['jti']
     
     def get_sub(self, token):
-        return jwt.decode(token, self._config.secret, algorithms=[self._config.algorithm])['sub']
+        return self.verify_token(token)['sub']
+    
+    def get_exp(self, token):
+        return self.verify_token(token)['exp']
     
     def get_raw_jwt(self, token):
-        return jwt.decode(token, self._config.secret, algorithms=[self._config.algorithm])
+        """
+        Return the payload of the token without checking the validity of the token
+        """
+        return jwt.decode(token, options={"verify_signature": False})
